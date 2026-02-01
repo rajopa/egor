@@ -1,0 +1,15 @@
+.idea/
+.DS_Store
+*.swp
+.env
+.env.*
+!.env.example
+.database
+*.db
+*.sqlite
+bin/
+/egor
+/main
+*.out
+*.exe
+*.test
