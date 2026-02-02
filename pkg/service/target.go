@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"log/slog"
 
 	domain "github.com/egor/watcher/pkg/model"
 	"github.com/egor/watcher/pkg/repository"
@@ -11,7 +12,7 @@ type DomainTargetService struct {
 	repo repository.Target
 }
 
-func NewDomainTargetService(repo repository.Target) *DomainTargetService {
+func NewDomainTargetService(repo repository.Target, logger *slog.Logger) *DomainTargetService {
 	return &DomainTargetService{repo: repo}
 }
 

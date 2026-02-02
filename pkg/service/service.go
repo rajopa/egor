@@ -1,6 +1,8 @@
 package service
 
 import (
+	"log/slog"
+
 	domain "github.com/egor/watcher/pkg/model"
 	"github.com/egor/watcher/pkg/repository"
 )
@@ -29,11 +31,11 @@ type Service struct {
 	Worker
 }
 
-func NewService(repos *repository.Repository) *Service {
+func NewService(repos *repository.Repository, logger *slog.Logger) *Service {
 	return &Service{
-		Authorization: NewAuthService(repos.Authorization),
-		Target:        NewDomainTargetService(repos.Target),
-		Worker:        NewWorkerService(repos.Target),
+		Authorization: NewAuthService(repos.Authorization, logger),
+		Target:        NewDomainTargetService(repos.Target, logger),
+		Worker:        NewWorkerService(repos.Target, logger),
 	}
 
 }

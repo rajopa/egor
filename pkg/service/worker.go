@@ -1,21 +1,21 @@
 package service
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
 
 	domain "github.com/egor/watcher/pkg/model"
 	"github.com/egor/watcher/pkg/repository"
-	"github.com/sirupsen/logrus"
 )
 
 type WorkerService struct {
-	repo repository.Target
+	repo   repository.Target
+	logger *slog.Logger
 }
 
-func NewWorkerService(repo repository.Target) *WorkerService {
+func NewWorkerService(repo repository.Target, logger *slog.Logger) *WorkerService {
 	return &WorkerService{repo: repo}
 }
 
@@ -24,7 +24,7 @@ func (s *WorkerService) Start() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		log.Println("[Worker] Starting check cycle...")
+		s.logger.Info("[Worker] Starting check cycle...")
 		s.checkAll()
 	}
 }
@@ -33,7 +33,7 @@ func (s *WorkerService) checkAll() {
 
 	targets, err := s.repo.GetAllForWorker()
 	if err != nil {
-		log.Printf("[Worker] Error getting targets: %v", err)
+		s.logger.Info("[Worker] Error getting targets: ", "error", err)
 		return
 	}
 
@@ -60,11 +60,11 @@ func (s *WorkerService) checkAll() {
 			}
 			err = s.repo.UpdateStatus(target.Id, status)
 			if err != nil {
-				logrus.Printf("[Worker] Error updating status for ID %d: %v", target.Id, err)
+				s.logger.Error("error updating status", "id", target.Id, "error", err)
 			}
 		}(t)
 	}
 
 	wg.Wait()
-	log.Println("[Worker] Check cycle finished")
+	s.logger.Info("[Worker] Check cycle finished")
 }

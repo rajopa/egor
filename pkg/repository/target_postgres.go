@@ -2,11 +2,11 @@ package repository
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	domain "github.com/egor/watcher/pkg/model"
 	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
 )
 
 type DomainTargetPostgres struct {
@@ -80,8 +80,7 @@ func (r *DomainTargetPostgres) Update(userId, targetId int, input domain.UpdateT
 		targetsTable, setQuery, argId, argId+1)
 	args = append(args, targetId, userId)
 
-	logrus.Debugf("updateQuery: %s", query)
-	logrus.Debugf("args: %s", args)
+	slog.Debug("database update trace", "query", query, "args", args)
 
 	_, err := r.db.Exec(query, args...)
 

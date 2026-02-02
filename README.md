@@ -52,6 +52,8 @@ Orchestration: Kubernetes & Docker
 
 Mocking: GoMock & Testify
 
+**Message Broker:** Kafka (Segmentio/kafka-go)
+
 🇷🇺 Инструкция на русском языке
 📝 О проекте
 
@@ -76,6 +78,8 @@ Testing: Полное покрытие
 
 Security: JWT-авторизация
 безопасное хранение паролей.
+
+**Message Broker:** Kafka (Segmentio/kafka-go)
 
 🚀 Как скачать и запустить
 
