@@ -20,7 +20,7 @@ Security: JWT-based route protection and salted password hashing.
 Clone the Repository:
 Bash
 
-    git clone https://github.com/your-username/proekt.git
+    git clone https://github.com/rajopa/proekt.git
     cd proekt
 
 Run via Docker Compose:
@@ -86,7 +86,7 @@ Security: JWT-авторизация
 Скачивание проекта:
 Bash
 
-    git clone https://github.com/your-username/proekt.git
+    git clone https://github.com/rajopa/proekt.git
     cd proekt
 
 Запуск через Docker Compose:
