@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	watcher "github.com/egor/watcher"
+	"github.com/egor/watcher/kafka"
 	"github.com/egor/watcher/pkg/handler"
 	"github.com/egor/watcher/pkg/repository"
 	"github.com/egor/watcher/pkg/service"
@@ -39,8 +40,9 @@ func main() {
 		logger.Error("failed to initialize db", "err", err.Error())
 		os.Exit(1)
 	}
+	kafkaProducer := kafka.NewProducer([]string{"localhost:9092"}, "target_updates", logger)
 	repos := repository.NewRepository(db)
-	services := service.NewService(repos, logger)
+	services := service.NewService(repos, logger, kafkaProducer)
 	handlers := handler.NewHandler(services)
 
 	srv := new(watcher.Server)

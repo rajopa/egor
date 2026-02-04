@@ -3,6 +3,7 @@ package service
 import (
 	"log/slog"
 
+	"github.com/egor/watcher/kafka"
 	domain "github.com/egor/watcher/pkg/model"
 	"github.com/egor/watcher/pkg/repository"
 )
@@ -31,11 +32,11 @@ type Service struct {
 	Worker
 }
 
-func NewService(repos *repository.Repository, logger *slog.Logger) *Service {
+func NewService(repos *repository.Repository, logger *slog.Logger, kafka *kafka.Producer) *Service {
 	return &Service{
 		Authorization: NewAuthService(repos.Authorization, logger),
 		Target:        NewDomainTargetService(repos.Target, logger),
-		Worker:        NewWorkerService(repos.Target, logger),
+		Worker:        NewWorkerService(repos.Target, logger, kafka),
 	}
 
 }

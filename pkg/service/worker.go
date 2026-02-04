@@ -1,11 +1,13 @@
 package service
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/egor/watcher/kafka"
 	domain "github.com/egor/watcher/pkg/model"
 	"github.com/egor/watcher/pkg/repository"
 )
@@ -13,10 +15,11 @@ import (
 type WorkerService struct {
 	repo   repository.Target
 	logger *slog.Logger
+	kafka  *kafka.Producer
 }
 
-func NewWorkerService(repo repository.Target, logger *slog.Logger) *WorkerService {
-	return &WorkerService{repo: repo}
+func NewWorkerService(repo repository.Target, logger *slog.Logger, kafka *kafka.Producer) *WorkerService {
+	return &WorkerService{repo: repo, logger: logger, kafka: kafka}
 }
 
 func (s *WorkerService) Start() {
@@ -52,15 +55,18 @@ func (s *WorkerService) checkAll() {
 			status := "active"
 
 			resp, err := client.Get(target.URL)
-			if err != nil || resp.StatusCode != http.StatusOK {
+
+			if err != nil {
 				status = "error"
-			}
-			if resp != nil {
+			} else {
+				if resp.StatusCode != http.StatusOK {
+					status = "error"
+				}
 				resp.Body.Close()
 			}
 			err = s.repo.UpdateStatus(target.Id, status)
-			if err != nil {
-				s.logger.Error("error updating status", "id", target.Id, "error", err)
+			if err == nil {
+				s.kafka.SendMessage(context.Background(), "target_updates", target)
 			}
 		}(t)
 	}

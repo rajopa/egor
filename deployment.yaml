@@ -1,9 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: watcher-config
+data:
+  PORT: "8000"
+  DB_HOST: "db"
+  DB_PORT: "5432"
+  DB_USER: "postgres"
+  DB_NAME: "postgres"
+  KAFKA_BROKERS: "kafka:9092"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres
+type: Opaque
+data:
+  qwerty: cXdlcnR5
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: watcher-beckend
+  name: watcher-backend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: watcher
@@ -18,13 +40,19 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 8000
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres # Имя секрета
+                  key: qwerty # Ключ внутри секрета
+          envFrom:
+            - configMapRef:
+                name: watcher-config # Берем все остальные переменные отсюда
           resources:
             requests:
               memory: "64Mi"
               cpu: "100m"
             limits:
-              memory: "128Mi"
-              cpu: "200m"
-          envFrom:
-            - configMapRef:
-                name: watcher-config
+              memory: "256Mi"
+              cpu: "300m"
