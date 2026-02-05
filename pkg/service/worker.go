@@ -39,37 +39,42 @@ func (s *WorkerService) checkAll() {
 		s.logger.Info("[Worker] Error getting targets: ", "error", err)
 		return
 	}
+	jobs := make(chan domain.Target, len(targets))
 
 	var wg sync.WaitGroup
 
-	for _, t := range targets {
+	for i := 0; i <= 5; i++ {
 		wg.Add(1)
-
-		go func(target domain.Target) {
+		go func() {
 			defer wg.Done()
+			client := http.Client{Timeout: 5 * time.Second}
+			for target := range jobs {
 
-			client := http.Client{
-				Timeout: 5 * time.Second,
-			}
+				status := "active"
 
-			status := "active"
+				resp, err := client.Get(target.URL)
 
-			resp, err := client.Get(target.URL)
-
-			if err != nil {
-				status = "error"
-			} else {
-				if resp.StatusCode != http.StatusOK {
+				if err != nil {
 					status = "error"
+				} else {
+					if resp.StatusCode != http.StatusOK {
+						status = "error"
+					}
+					resp.Body.Close()
 				}
-				resp.Body.Close()
+				err = s.repo.UpdateStatus(target.Id, status)
+				if err == nil {
+					s.kafka.SendMessage(context.Background(), "target_updates", target)
+
+				}
 			}
-			err = s.repo.UpdateStatus(target.Id, status)
-			if err == nil {
-				s.kafka.SendMessage(context.Background(), "target_updates", target)
-			}
-		}(t)
+
+		}()
 	}
+	for _, t := range targets {
+		jobs <- t
+	}
+	close(jobs)
 
 	wg.Wait()
 	s.logger.Info("[Worker] Check cycle finished")
