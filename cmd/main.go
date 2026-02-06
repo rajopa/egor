@@ -48,12 +48,12 @@ func main() {
 	srv := new(watcher.Server)
 	go func() {
 		services.Worker.Start()
-	}()
-	logger.Info("DomainApp Started")
+		logger.Info("DomainApp Started")
 
-	if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
-		logger.Error("error occurred while running http server:", "err", err.Error())
-	}
+		if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
+			logger.Error("error occurred while running http server:", "err", err.Error())
+		}
+	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
