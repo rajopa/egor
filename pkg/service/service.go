@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/egor/watcher/kafka"
@@ -23,7 +24,7 @@ type Target interface {
 }
 
 type Worker interface {
-	Start()
+	Start(ctx context.Context)
 }
 
 type Service struct {

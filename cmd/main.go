@@ -46,8 +46,12 @@ func main() {
 	handlers := handler.NewHandler(services)
 
 	srv := new(watcher.Server)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go services.Worker.Start(ctx)
+
 	go func() {
-		services.Worker.Start()
 		logger.Info("DomainApp Started")
 
 		if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
@@ -58,6 +62,8 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	<-quit
+
+	cancel()
 
 	logger.Info("DomainApp Shutting Down")
 

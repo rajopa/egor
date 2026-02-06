@@ -22,7 +22,7 @@ func NewWorkerService(repo repository.Target, logger *slog.Logger, kafka *kafka.
 	return &WorkerService{repo: repo, logger: logger, kafka: kafka}
 }
 
-func (s *WorkerService) Start() {
+func (s *WorkerService) Start(ctx context.Context) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
