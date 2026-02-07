@@ -17,7 +17,7 @@ type Target interface {
 	Update(userId, targetId int, input domain.UpdateTargetInput) error
 	Delete(userId, targetId int) error
 	GetAllForWorker() ([]domain.Target, error)
-	UpdateStatus(id int, status string) error
+	UpdateStatus(id int, status bool) error
 }
 
 type Repository struct {

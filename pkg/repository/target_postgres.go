@@ -102,7 +102,7 @@ func (r *DomainTargetPostgres) GetAllForWorker() ([]domain.Target, error) {
 	return targets, err
 }
 
-func (r *DomainTargetPostgres) UpdateStatus(id int, status string) error {
+func (r *DomainTargetPostgres) UpdateStatus(id int, status bool) error {
 	query := fmt.Sprintf("UPDATE %s SET status = $1, last_check = NOW() WHERE id = $2", targetsTable)
 	_, err := r.db.Exec(query, status, id)
 	return err

@@ -26,13 +26,18 @@ func (s *WorkerService) Start(ctx context.Context) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		s.logger.Info("[Worker] Starting check cycle...")
-		s.checkAll()
+	for {
+		select {
+		case <-ctx.Done():
+			s.logger.Info("[Worker] Stopped gracefully")
+			return
+		case <-ticker.C:
+			s.checkAll(ctx)
+		}
 	}
 }
 
-func (s *WorkerService) checkAll() {
+func (s *WorkerService) checkAll(ctx context.Context) {
 
 	targets, err := s.repo.GetAllForWorker()
 	if err != nil {
@@ -43,29 +48,38 @@ func (s *WorkerService) checkAll() {
 
 	var wg sync.WaitGroup
 
+	client := http.Client{Timeout: 5 * time.Second}
 	for i := 0; i <= 5; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			client := http.Client{Timeout: 5 * time.Second}
+
 			for target := range jobs {
 
-				status := "active"
+				req, err := http.NewRequestWithContext(ctx, "GET", target.URL, nil)
+				if err != nil {
+					continue
+				}
+				resp, err := client.Do(req)
 
-				resp, err := client.Get(target.URL)
+				if ctx.Err() != nil {
+					return
+				}
+
+				status := true
 
 				if err != nil {
-					status = "error"
+					status = false
 				} else {
 					if resp.StatusCode != http.StatusOK {
-						status = "error"
+						status = false
 					}
 					resp.Body.Close()
 				}
+				target.Status = status
 				err = s.repo.UpdateStatus(target.Id, status)
 				if err == nil {
-					s.kafka.SendMessage(context.Background(), "target_updates", target)
-
+					s.kafka.SendMessage(ctx, "target_updates", target)
 				}
 			}
 
