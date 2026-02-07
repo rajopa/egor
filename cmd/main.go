@@ -29,18 +29,27 @@ func main() {
 		os.Exit(1)
 	}
 	db, err := repository.NewPostgresDB(repository.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
-		DBname:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
-		Password: os.Getenv("DB_PASSWORD"),
+		Host:     viper.GetString("DB_HOST"),
+		Port:     viper.GetString("DB_PORT"),
+		Username: viper.GetString("DB_USER"),
+		DBname:   viper.GetString("DB_NAME"),
+		SSLMode:  viper.GetString("DB_SSLMODE"),
+		Password: viper.GetString("DB_PASSWORD"),
 	})
 	if err != nil {
 		logger.Error("failed to initialize db", "err", err.Error())
 		os.Exit(1)
 	}
-	kafkaProducer := kafka.NewProducer([]string{"localhost:9092"}, "target_updates", logger)
+	schema, err := os.ReadFile("schema/000001_init.up.sql")
+	if err == nil {
+		db.MustExec(string(schema))
+		logger.Info("Migrations applied successfully")
+	}
+	kafkaAddr := viper.GetString("KAFKA_BROKERS")
+	if kafkaAddr == "" {
+		kafkaAddr = "localhost:9092"
+	}
+	kafkaProducer := kafka.NewProducer([]string{kafkaAddr}, "target_updates", logger)
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos, logger, kafkaProducer)
 	handlers := handler.NewHandler(services)
@@ -77,5 +86,6 @@ func main() {
 func initConfig() error {
 	viper.AddConfigPath("pkg/config")
 	viper.SetConfigName("configs")
+	viper.AutomaticEnv()
 	return viper.ReadInConfig()
 }
