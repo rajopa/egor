@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	watcher "github.com/egor/watcher"
 	"github.com/egor/watcher/kafka"
@@ -40,11 +41,22 @@ func main() {
 		logger.Error("failed to initialize db", "err", err.Error())
 		os.Exit(1)
 	}
+
+	logger.Info("Attempting to apply migrations...")
+
 	schema, err := os.ReadFile("schema/000001_init.up.sql")
-	if err == nil {
-		db.MustExec(string(schema))
-		logger.Info("Migrations applied successfully")
+	if err != nil {
+		logger.Error("CRITICAL: migration file not found", "path", "schema/000001_init.up.sql", "err", err)
+	} else {
+		_, err = db.Exec(string(schema))
+		if err != nil {
+			logger.Error("failed to apply migration", "err", err)
+		} else {
+			logger.Info("Migrations applied successfully!")
+		}
 	}
+	logger.Info("Waiting for DB to settle down...")
+	time.Sleep(5 * time.Second)
 	kafkaAddr := viper.GetString("KAFKA_BROKERS")
 	if kafkaAddr == "" {
 		kafkaAddr = "localhost:9092"

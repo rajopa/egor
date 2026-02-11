@@ -40,6 +40,9 @@ services:
     restart: always
     ports:
       - "8000:8000"
+    volumes:
+      - ./schema:/app/schema
+      - ./.env:/app/.env
     environment:
       - DB_HOST=db
       - DB_PORT=5432
@@ -51,7 +54,7 @@ services:
     depends_on:
       - db
       - kafka
-    command: ["./watcher"]
+    command: ["/app/watcher"]
 
 volumes:
   postgres_data:
